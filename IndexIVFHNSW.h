@@ -20,7 +20,7 @@ namespace faiss {
 
 struct HNSWInvertedLists: InvertedLists {
     
-    std::vector<IndexIDMap *> indexes;
+    std::vector<faiss::IndexIDMap *> indexes;
     HNSWInvertedLists (size_t nlist, size_t code_size, size_t M);
 
     size_t list_size(size_t list_no) const override;
@@ -35,7 +35,7 @@ struct HNSWInvertedLists: InvertedLists {
                          const idx_t *ids, const uint8_t *code) override;
 
     void resize (size_t list_no, size_t new_size) override;
-
+    void set_efSearch(size_t efSearch);
     virtual ~HNSWInvertedLists ();
 };
 
@@ -46,9 +46,9 @@ struct HNSWInvertedLists: InvertedLists {
 struct IndexIVFHNSW: IndexIVF {
 
     /// each IndexHNSW get k2 nearest neighbors of query
-    size_t k2;
+    float k_factor;
     IndexIVFHNSW (
-            Index * quantizer, size_t d, size_t nlist_,size_t M, size_t w, size_t k2_,
+            Index * quantizer, size_t d, size_t nlist_,size_t M, 
             MetricType = METRIC_L2);
 
     /// same as add_with_ids, with precomputed coarse quantizer

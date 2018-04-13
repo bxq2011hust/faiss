@@ -80,6 +80,7 @@ extern "C" {
 #include "IndexIVFFlat.h"
 #include "IndexScalarQuantizer.h"
 #include "IndexHNSW.h"
+#include "IndexIVFHNSW.h"
 #include "MetaIndexes.h"
 #include "FaissAssert.h"
 
@@ -253,6 +254,7 @@ int get_num_gpus()
 %include "IndexIVF.h"
 %include "IndexScalarQuantizer.h"
 %include "IndexHNSW.h"
+%include "IndexIVFHNSW.h"
 %include "IndexIVFFlat.h"
 %include "OnDiskInvertedLists.h"
 
@@ -431,6 +433,7 @@ struct AsyncIndexSearchC {
     DOWNCAST ( IndexIVFPQ )
     DOWNCAST ( IndexIVFScalarQuantizer )
     DOWNCAST ( IndexIVFFlat )
+    DOWNCAST ( IndexIVFHNSW )
     DOWNCAST ( IndexIVF )
     DOWNCAST ( IndexFlat )
     DOWNCAST ( IndexPQ )

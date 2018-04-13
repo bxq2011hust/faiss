@@ -30,7 +30,7 @@ LIBOBJ=hamming.o  utils.o \
        PolysemousTraining.o MetaIndexes.o Index.o \
        ProductQuantizer.o AutoTune.o AuxIndexStructures.o \
        IndexScalarQuantizer.o FaissException.o IndexHNSW.o \
-       IndexIVFFlat.o OnDiskInvertedLists.o
+       IndexIVFHNSW.o IndexIVFFlat.o OnDiskInvertedLists.o
 
 
 libfaiss.a: $(LIBOBJ)
@@ -49,6 +49,7 @@ utils.o:             EXTRAFLAGS=$(BLASCFLAGS)
 VectorTransform.o:   EXTRAFLAGS=$(BLASCFLAGS)
 ProductQuantizer.o:  EXTRAFLAGS=$(BLASCFLAGS)
 IndexHNSW.o:         EXTRAFLAGS=$(BLASCFLAGS)
+IndexIVFHNSW.o:         EXTRAFLAGS=$(BLASCFLAGS)
 
 # for MKL, the flags when generating a dynamic lib are different from
 # the ones when making an executable, but by default they are the same
@@ -73,7 +74,7 @@ demos/demo_sift1M: demos/demo_sift1M.cpp libfaiss.a
 # SWIG interfaces
 
 HFILES = IndexFlat.h Index.h IndexLSH.h IndexPQ.h IndexIVF.h \
-    IndexIVFPQ.h VectorTransform.h index_io.h utils.h \
+    IndexIVFPQ.h VectorTransform.h index_io.h utils.h IndexIVFHNSW.h \
     PolysemousTraining.h Heap.h MetaIndexes.h AuxIndexStructures.h \
     Clustering.h hamming.h AutoTune.h IndexScalarQuantizer.h FaissException.h
 
@@ -148,6 +149,10 @@ IndexScalarQuantizer.o: IndexScalarQuantizer.cpp IndexScalarQuantizer.h \
 FaissException.o: FaissException.cpp FaissException.h
 IndexHNSW.o: IndexHNSW.cpp IndexHNSW.h IndexFlat.h Index.h IndexPQ.h \
  ProductQuantizer.h Clustering.h Heap.h PolysemousTraining.h \
+ IndexScalarQuantizer.h IndexIVF.h utils.h FaissAssert.h FaissException.h \
+ IndexIVFPQ.h
+IndexIVFHNSW.o: IndexIVFHNSW.cpp IndexIVFHNSW.h IndexHNSW.h IndexFlat.h Index.h IndexPQ.h \
+ ProductQuantizer.h Clustering.h Heap.h PolysemousTraining.h MetaIndexes.h \
  IndexScalarQuantizer.h IndexIVF.h utils.h FaissAssert.h FaissException.h \
  IndexIVFPQ.h
 IndexIVFFlat.o: IndexIVFFlat.cpp IndexIVFFlat.h IndexIVF.h Index.h \

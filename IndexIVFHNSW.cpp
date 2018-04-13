@@ -45,8 +45,9 @@ size_t HNSWInvertedLists::add_entries(
         return 0;
     assert(list_no < nlist);
     IndexIDMap *index = indexes[list_no];
+    size_t o = index->id_map.size();
     index->add_with_ids(n_entry, (const float *)code, ids_in);
-    return index->id_map.size();
+    return o;
 }
 
 size_t HNSWInvertedLists::list_size(size_t list_no) const
@@ -72,6 +73,14 @@ void HNSWInvertedLists::resize(size_t list_no, size_t new_size)
 {
 }
 
+void HNSWInvertedLists::set_efSearch(size_t efSearch)
+{
+    for(size_t i=0; i<indexes.size();++i)
+    {
+        (dynamic_cast<IndexHNSW *>(indexes[i]->index))->hnsw.efSearch = efSearch;
+    }
+}
+
 void HNSWInvertedLists::update_entries(
     size_t list_no, size_t offset, size_t n_entry,
     const idx_t *ids_in, const uint8_t *codes_in)
@@ -83,6 +92,7 @@ void HNSWInvertedLists::update_entries(
 
 HNSWInvertedLists::~HNSWInvertedLists()
 {
+#pragma omp parallel for
     for (size_t i = 0; i < nlist; ++i)
     {
         delete indexes[i];
@@ -95,12 +105,14 @@ HNSWInvertedLists::~HNSWInvertedLists()
  ******************************************/
 
 IndexIVFHNSW::IndexIVFHNSW(Index *quantizer,
-                           size_t d, size_t nlist, size_t M, size_t w, size_t k2_, MetricType metric) : IndexIVF(quantizer, d, nlist, sizeof(float) * d, metric), k2(k2_)
+                           size_t d, size_t nlist, size_t M, MetricType metric) : IndexIVF(quantizer, d, nlist, sizeof(float) * d, metric), k_factor(1.0)
 {
+    // Index * clustering_anssigner;
+    // this->Level1Quantizer::clustering_index = clustering_anssigner;
+    this->Level1Quantizer::quantizer_trains_alone = 2;
     code_size = sizeof(float) * d;
     delete invlists;
     invlists = new HNSWInvertedLists(nlist, code_size, M);
-    nprobe = w;
 }
 
 void IndexIVFHNSW::add_with_ids(idx_t n, const float *x, const long *xids)
@@ -127,11 +139,8 @@ void IndexIVFHNSW::add_core(idx_t n, const float *x, const long *xids,
     {
         long *idx0 = new long[n];
         del.set(idx0);
-        float * dis = new float[n];
         quantizer->assign(n, x, idx0);
-        // quantizer->search(n, x, 1, dis, idx0);
         idx = idx0;
-        // delete [] dis;
     }
     long n_add = 0;
     for (size_t i = 0; i < n; i++)
@@ -256,7 +265,7 @@ void search_knn_L2sqr(const IndexIVFHNSW &ivf,
                 key, ik, ivf.nlist);
 
             nlistv++;
-            size_t list_size = std::min(ivf.invlists->list_size(key), ivf.k2);
+            size_t list_size = std::min(ivf.invlists->list_size(key), (size_t)ivf.k_factor * k);
             float *dists = new float[list_size];
             Index::idx_t *ids = store_pairs ? nullptr : new Index::idx_t[list_size];
             ScopeDeleter<float> del1(dists);

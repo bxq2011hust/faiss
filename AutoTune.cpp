@@ -25,6 +25,7 @@
 #include "MetaIndexes.h"
 #include "IndexScalarQuantizer.h"
 #include "IndexHNSW.h"
+#include "IndexIVFHNSW.h"
 
 
 namespace faiss {
@@ -366,6 +367,13 @@ void ParameterSpace::initialize (const Index * index)
                 pr.values.push_back (1 << i);
             }
         }
+        if (DC (IndexIVFHNSW)) {
+            ParameterRange & pr = add_range("k_factor");
+            for (int i = 6; i <= 15; i++) {
+                pr.values.push_back (0.1 * i);
+                pr.values.push_back (pr.values.back() + 0.05);
+            }
+        }
     }
     if (DC (IndexPQ)) {
         ParameterRange & pr = add_range("ht");
@@ -508,11 +516,23 @@ void ParameterSpace::set_index_parameter (
             ix->k_factor = val;
             return;
         }
+        if (DC (IndexIVFHNSW)) {
+            ix->k_factor = val;
+            return;
+        }
     }
     if (name == "max_codes") {
         if (DC (IndexIVF)) {
             ix->max_codes = finite(val) ? size_t(val) : 0;
             return;
+        }
+    }
+    if (name == "efSearch") {
+        if (DC (IndexIVF)) {
+            if(dynamic_cast<const HNSWInvertedLists*>(ix->invlists)){
+                (dynamic_cast<HNSWInvertedLists*>(ix->invlists))->set_efSearch((size_t)val);
+                return;
+            }
         }
     }
     FAISS_THROW_FMT ("ParameterSpace::set_index_parameter:"
