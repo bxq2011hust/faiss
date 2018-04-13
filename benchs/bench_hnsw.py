@@ -46,7 +46,7 @@ gt = ivecs_read("sift1M/sift_groundtruth.ivecs")
 todo = sys.argv[1:]
 
 if todo == []:
-    todo = 'hnsw hnsw_sq ivf ivf_hnsw_quantizer kmeans kmeans_hnsw'.split()
+    todo = 'hnsw hnsw_sq hnsw_pq ivf ivf_hnsw_quantizer kmeans kmeans_hnsw'.split()
 
 
 def evaluate(index):
@@ -110,6 +110,33 @@ if 'hnsw_sq' in todo:
         print "efSearch", efSearch,
         index.hnsw.efSearch = efSearch
         evaluate(index)
+
+if 'hnsw_pq' in todo:
+
+    print "Testing HNSW with a product quantizer"
+    # also set M so that the vectors and links both use 128 bytes per
+    # entry (total 256 bytes)
+    index = faiss.IndexHNSWPQ(d, 2, 32)
+
+    print "training"
+    # training for the product quantizer
+    index.train(xt)
+
+    # this is the default, higher is more accurate and slower to
+    # construct
+    index.hnsw.efConstruction = 40
+
+    print "add"
+    # to see progress
+    index.verbose = True
+    index.add(xb)
+
+    print "search"
+    for efSearch in 16, 32, 64, 128, 256:
+        print "efSearch", efSearch,
+        index.hnsw.efSearch = efSearch
+        evaluate(index)
+
 
 if 'ivf' in todo:
 
