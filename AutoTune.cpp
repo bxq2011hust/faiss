@@ -534,6 +534,11 @@ void ParameterSpace::set_index_parameter (
                 return;
             }
         }
+        else if(DC (IndexHNSW)){
+            ix->hnsw.efSearch = val;
+            return;
+        }
+
     }
     FAISS_THROW_FMT ("ParameterSpace::set_index_parameter:"
                      "could not set parameter %s",
